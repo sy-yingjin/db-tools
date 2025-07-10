@@ -43,6 +43,7 @@ def test_get_stn_type(mocker, capsys, mock_stn_df):
     # for FNFError
     assert "Can't locate the Station List file" in captured.out
 
+
 @pytest.mark.parametrize(
     "col_names1, col_names2, col_names_out",
     [
