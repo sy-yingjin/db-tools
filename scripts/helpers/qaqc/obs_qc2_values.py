@@ -17,37 +17,28 @@ config_file = config_dir / "qc2_config.csv"
 
 
 # get the configuration for min-max values
-def get_minmax(config_file: Path, var: str) -> list[int]:
+def get_minmax(config_file: Path) -> dict[str, int | int]:
     try:
         # extract data from csv
         config_df = pd.read_csv(config_file, usecols=["var", "min", "max"])
+        config_df = config_df.set_index("var")
+        test_dict = config_df.to_dict(orient="index")
+        out_dict = {key: list(value.values()) for key, value in test_dict.items()}
 
-        if var not in config_df["var"].to_numpy(dtype=str):
-            raise ValueError
-
-        max = config_df.loc[(config_df["var"] == var), "max"].item()
-        min = config_df.loc[(config_df["var"] == var), "min"].item()
-        return [min, max]
+        return out_dict
 
     except FileNotFoundError:
         print("Can't locate the Configuration file")
-    except ValueError:
-        print("Unrecognized Variable Found")
     except:  # noqa: E722
         print("Something went wrong with getting the MinMax of Range Checking")
 
 
 def get_range(df: pd.DataFrame, stn_id: int, check_df: pd.DataFrame) -> pd.DataFrame:
     try:
-        # these variables are expected to be found in the CSV file
-        test_range = ["temp", "srad", "pres", "rh", "wdir", "wspd"]
-        for variable in test_range:
-            if variable not in df.columns:
-                raise ValueError
-
-            minmax = get_minmax(config_file, variable)
+        minmax = get_minmax(config_file)
+        for key in minmax.keys():
             for index, value in df.loc[
-                (df[variable] < minmax[0]) | (df[variable] > minmax[1]), variable
+                (df[key] < minmax[key][0]) | (df[key] > minmax[key][1]), key
             ].items():
                 obs_id = df["id"].get(index)
 
@@ -61,15 +52,13 @@ def get_range(df: pd.DataFrame, stn_id: int, check_df: pd.DataFrame) -> pd.DataF
                     obs_id,
                     index,
                     "invalid range",
-                    variable,
+                    key,
                     value,
                 ]
                 check_df.index += 1
                 check_df.sort_index
         return check_df
 
-    except ValueError:
-        print("The column you're asking for doesn't exist")
     except:  # noqa: E722
         print("Something went wrong with testing the range")
 

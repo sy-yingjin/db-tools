@@ -7,6 +7,7 @@ from helpers.qaqc import obs_qc0_splitstn
 from helpers.qaqc import obs_qc1_missing
 from helpers.qaqc import obs_qc2_values
 from helpers.qaqc import obs_qc3_hourly
+from helpers.qaqc import obs_qc4_change
 
 
 def help_message(nargs: int):
@@ -55,9 +56,14 @@ def main():
 
         print("\nRunning QC3 = Converting Data to Hourly Reports Scipt... \n")
         obs_qc3_hourly.qc3_hourly(yyyy, mm)
+
+        print("\nRunning QC4 = Comparing Data Between Hours... \n")
+        obs_qc4_change.qc4_change(yyyy, mm)
+
     except NameError:
         print("One of the QAQC scripts is missing or not working.")
-    except:  # noqa: E722
+    except Exception as e:  # noqa: E722
+        print(f"The exception is: {e}")
         print("One of the QAQC scripts didn't run properly.")
 
 
