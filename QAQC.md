@@ -25,6 +25,8 @@ This file checks the completeness of the observations from each station, as per 
 
 > *Returns*
 > - `observation-{yyyy}{mm}-obs_log.csv` -- a file that contains the columns:
+>   - `qc_level`
+>   - `stn_id`
 >   - `qc1-missing_perc`
 >   - `qc1-expected_obs`
 >   - `qc1-actual_obs`
@@ -37,9 +39,10 @@ This file checks the validity and the cohesion of the data. Testing the validity
 
 > *Returns*
 > - `observation-{yyyy}{mm}-obs_log.csv` -- a file that contains the columns:
->   - `id`
+>   - `qc_level`
+>   - `stn_id`
 >   - `timestamp`
->   - `flagged-error`
+>   - `flagged-error` = [`invalid data`, `incohesive data`]
 >   - `qc2-flagged_var`
 >   - `qc2-flagged_data`
 
@@ -54,3 +57,21 @@ This file converts the observation data into hourly observation reports. It retu
 > - [UPDATED] `observation-{yyyy}{mm}-{station_id}.csv` -- files are updated to contain the new values made after the conversion
 
 ### obs-qc4_change.py
+This file checks the temporal validity of the data. Testing the temporal validity requires the help of a supporting file that sets the limits of each column.
+
+> *Returns*
+> - `observation-{yyyy}{mm}-obs_log.csv` -- a file that contains the columns:
+>   - `id`
+>   - `timestamp`
+>   - `flagged-error` = [`invalid rate`]
+>   - `qc4-flagged_var`
+>   - `qc4-flagged_data`
+>   - `qc4-expected_data`
+
+> Supporting files include:
+> - `qc4_config_greater.csv` -- a CSV file that allows the user to modify the limits of any column in the database to flag any erroneous data (where data is flagged if it is greater than X).
+> - `qc4_config_lesser.csv` -- a CSV file that allows the user to modify the limits of any column in the database to flag any erroneous data (where data is flagged if it is lesser than X).
+> - `qc4_config_sd.csv` -- a CSV file that allows the user to modify the limits of any column in the database to flag any erroneous data (where data is flagged if it is X too far from the 'mean').
+
+## Flowchart
+![QAQC_flowchart](flowchart_QAQC.png)
