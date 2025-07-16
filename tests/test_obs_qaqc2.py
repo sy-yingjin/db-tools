@@ -13,7 +13,10 @@ from helpers.qaqc.obs_qc2_values import (
 
 @pytest.fixture
 def mock_minmax_df():
-    return pd.DataFrame({"var": ["temp", "wdir"], "min": [15, 0], "max": [40, 360]})
+    return pd.DataFrame({
+        "var": ["temp", "wdir"],
+        "min": [15, 0],
+        "max": [40, 360]})
 
 
 @pytest.fixture
@@ -43,19 +46,13 @@ def test_get_minmax(mocker, capsys, mock_minmax_df):
     mock_df = mocker.Mock()
     mock_df = mock_minmax_df
     mock_csv = mocker.patch("pandas.read_csv", return_value=mock_df)
-    assert get_minmax("dummy.csv", "temp") == [15, 40]
+    assert get_minmax("dummy.csv") == {"temp": [15, 40], "wdir": [0, 360]}
     mock_csv.assert_called_once_with("dummy.csv", usecols=["var", "min", "max"])
-    assert get_minmax("dummy.csv", "wdir") == [0, 360]
 
-    mock_csv = mocker.patch("pandas.read_csv", side_effect=ValueError)
-    assert get_minmax("dummy.csv", "unknown") is None
     mock_csv = mocker.patch("pandas.read_csv", side_effect=FileNotFoundError)
-    assert get_minmax("dummy.csv", "temp") is None
+    assert get_minmax("dummy.csv") is None
 
     captured = capsys.readouterr()
-    # for ValueError
-    assert "Unrecognized Variable Found" in captured.out
-    # for FNFError
     assert "Can't locate the Configuration file" in captured.out
 
 
