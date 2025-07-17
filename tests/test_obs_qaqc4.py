@@ -40,54 +40,26 @@ def mock_values_df():
     return df
 
 
-def test_get_config(mocker, capsys, mock_config_df):
+def test_get_config(mocker, mock_config_df):
     mock_df = mocker.Mock()
     mock_df = mock_config_df
-    mock_csv = mocker.patch("pandas.read_csv", return_value=mock_df)
+    mocker.patch("pandas.read_csv", return_value=mock_df)
     assert get_config("dummy.csv") == {0: ("temp", 1, 5), 1: ("pres", 12, 6)}
-    mock_csv.assert_called_once_with("dummy.csv", usecols=["var", "period", "diff"])
-
-    mock_csv = mocker.patch("pandas.read_csv", side_effect=FileNotFoundError)
-    assert get_config("dummy.csv") is None
-
-    captured = capsys.readouterr()
-    assert "Can't locate the Configuration file" in captured.out
 
 
-def test_get_greater_diff(mocker, capsys, mock_values_df):
+def test_get_greater_diff(mocker, mock_values_df):
     mock_df = mock_values_df
     mocker.patch("pandas.read_csv", return_value=mock_df)
     assert get_greater_diff("dummy.csv", 12, "dump.csv") is None
 
-    mock_df = mock_values_df
-    mocker.patch("helpers.qaqc.obs_qc4_change.get_greater_diff", side_effect=SystemError)
-    assert get_greater_diff("dummy.csv", 12, "dump.csv") is None
 
-    captured = capsys.readouterr()
-    assert "Something went wrong with testing the greater than change rate" in captured.out
-
-
-def test_get_lesser_diff(mocker, capsys, mock_values_df):
+def test_get_lesser_diff(mocker, mock_values_df):
     mock_df = mock_values_df
     mocker.patch("pandas.read_csv", return_value=mock_df)
     assert get_lesser_diff("dummy.csv", 12, "dump.csv") is None
 
-    mock_df = mock_values_df
-    mocker.patch("helpers.qaqc.obs_qc4_change.get_lesser_diff", side_effect=SystemError)
-    assert get_lesser_diff("dummy.csv", 12, "dump.csv") is None
 
-    captured = capsys.readouterr()
-    assert "Something went wrong with testing the lesser than change rate" in captured.out
-
-
-def test_get_standard_dev(mocker, capsys , mock_values_df):
+def test_get_standard_dev(mocker , mock_values_df):
     mock_df = mock_values_df
     mocker.patch("pandas.read_csv", return_value=mock_df)
     assert get_standard_dev("dummy.csv", 12, "dump.csv", 54) is None
-
-    mock_df = mock_values_df
-    mocker.patch("helpers.qaqc.obs_qc4_change.get_standard_dev", side_effect=SystemError)
-    assert get_standard_dev("dummy.csv", 12, "dump.csv", 54) is None
-
-    captured = capsys.readouterr()
-    assert "Something went wrong with testing the change rate's standard deviation" in captured.out

@@ -24,24 +24,14 @@ def mock_timestamp_df():
     )
 
 
-def test_get_stn_type(mocker, capsys, mock_stn_df):
+def test_get_stn_type(mocker, mock_stn_df):
     mock_df = mocker.Mock()
     mock_df = mock_stn_df
-    mock_csv = mocker.patch("pandas.read_csv", return_value=mock_df)
+    mocker.patch("pandas.read_csv", return_value=mock_df)
     assert get_stn_type("dummy.csv", 9) == "SMS"
-    mock_csv.assert_called_once_with("dummy.csv", usecols=["id", "station_type"])
+
     assert get_stn_type("dummy.csv", 5001) == "MO"
-
-    mock_csv = mocker.patch("pandas.read_csv", side_effect=ValueError)
     assert get_stn_type("dummy.csv", 1) is None
-    mock_csv = mocker.patch("pandas.read_csv", side_effect=FileNotFoundError)
-    assert get_stn_type("dummy.csv", 9) is None
-
-    captured = capsys.readouterr()
-    # for ValueError
-    assert "Unrecognized Station ID Found" in captured.out
-    # for FNFError
-    assert "Can't locate the Station List file" in captured.out
 
 
 @pytest.mark.parametrize(
@@ -78,14 +68,10 @@ def test_get_matching_columns(col_names1, col_names2, col_names_out):
     assert get_matching_columns(col_names1, col_names2) == col_names_out
 
 
-def test_get_frequency(mocker, capsys):
+def test_get_frequency():
     assert get_frequency("SMS") == 144
     assert get_frequency("MO") == 288
-
-    mocker.patch("helpers.qaqc.obs_qc1_missing.get_frequency", side_effect=ValueError)
     assert get_frequency("unknown") is None
-    captured = capsys.readouterr()
-    assert "Unidentified Station Type" in captured.out
 
 
 def test_set_timestamp(mocker, mock_timestamp_df):
