@@ -6,31 +6,42 @@ from pathlib import Path
 from calendar import monthrange
 from helpers.db import get_data, get_stn
 
-tz = pytz.timezone("Asia/Manila")
-
 
 # GLOBAL VARIABLES
+tz = pytz.timezone("Asia/Manila")
 file_suffix = "observation"
 out_dir = Path("bak")
 
+# Add more table names to the list if new ones are made in the future
+# get data from the Lufft and Davis AWS
+table_name = ["observations_observation", "observations_mo_observation"]
 
-# pull all data about the stations from the database
+
 def get_stations():
-    stn_df = get_stn()
+    """SUMMARY:
+    Calls the function `get_stn()` that accesses
+    the AWS database and stores
+    the station id, name, and type in a CSV file
+    """
 
+    stn_df = get_stn()
     stn_file = out_dir / "stn-type.csv"
     stn_file.parent.mkdir(parents=True, exist_ok=True)
     stn_df.to_csv(stn_file, index=False)
 
 
 def split_station(yyyy: int, mm: int):
+    """SUMMARY:
+    With arguments `yyyy` and `mm`, gets the start and end date of the month
+    to be able to pull from tables listed in `table_name`.
+    Calls the function `get_data()` and stores all observations
+    in CSV files, separated by unique station IDs.
+    """
+
     start_date = tz.localize(datetime.strptime(f"{yyyy}-{mm}-01", "%Y-%m-%d"))
     ndays = monthrange(int(yyyy), int(mm))[1]
     end_date = tz.localize(datetime.strptime(f"{yyyy}-{mm}-{ndays}", "%Y-%m-%d"))
 
-    # get data from the Lufft and Davis AWS
-    # stored in a list for easy iteration if there are future databases to join
-    table_name = ["observations_observation", "observations_mo_observation"]
     for table in table_name:
         df = get_data(table, start_date, end_date)
 

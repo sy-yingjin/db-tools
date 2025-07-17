@@ -7,12 +7,9 @@ from pathlib import Path
 from calendar import monthrange
 
 
-# Prerequisite/s: `obs_qc0_splitstn.py`
-
 # GLOBAL VARIABLES
 file_prefix = "observation"
 main_dir = Path("bak")
-
 stn_file = main_dir / "stn-type.csv"
 
 COL_NAMES = {
@@ -67,63 +64,102 @@ COL_NAMES = {
 }
 
 
-def get_stn_type(stn_file: Path, id: int) -> str:
+def get_stn_type(file: Path | None = None, id: int | None = None) -> str | None:
+    """SUMMARY:
+    Reads the `stn-type.csv` file and returns the station-type string.
+
+    Raises:
+        FileNotFoundError: can't locate the `stn-type.csv` file
+        ValueError: a station_id is unrecognized
+    """
     try:
-        # extract data from stn csv
+        # Error Handling #1
+        if file is None:
+            file = stn_file
+            if stn_file is None:
+                print("FileNotFoundError: `stn-type.csv` can't be located.")
+                return None
+
+        # Error Handling #2
+        if id is None:
+            print(f"ValueError: Unidentified Station ID: {id}")
+            return None
+
         stn_df = pd.read_csv(stn_file, usecols=["id", "station_type"])
-        if id not in stn_df["id"].to_numpy(dtype=int):
-            raise ValueError
+
         aws = stn_df.loc[(stn_df["id"] == id), "station_type"].item()
         return aws
 
-    except FileNotFoundError:
-        print("Can't locate the Station List file")
-    except ValueError:
-        print("Unrecognized Station ID Found")
-    except:  # noqa: E722
+    except Exception as e:
         print("Something went wrong with getting the Station List")
+        print(f"The exception is: {e}")
 
 
 # get columns excluding station_id, id created_on and updated_on
 def get_matching_columns(
     col_names1: list[str] | None = None, col_names2: list[str] | None = None
 ) -> list[str] | None:
-    if col_names1 is None:
-        col_names1 = COL_NAMES["davis"]
-    if col_names2 is None:
-        col_names2 = COL_NAMES["lufft"]
+    """SUMMARY:
+    Takes in columns and compares them to
+    return a list of matching column names between
+    the stations, for universality.
 
-    # matching column data
-    col_names = [x for x in col_names1 if x in col_names2]
-    if not col_names:
-        print("No Matching Columns Found")
-        return None
+    Raises:
+        ValueError: None of the columns match
+        KeyError: Required columns are missing
+    """
+    try:
+        if col_names1 is None:
+            col_names1 = COL_NAMES["davis"]
+        if col_names2 is None:
+            col_names2 = COL_NAMES["lufft"]
 
-    # Columns that are needed for the script to function
-    necessary_cols = ["id", "timestamp", "qc_level"]
-    for item in necessary_cols:
-        if item not in col_names:
-            print(f"Missing required column: {item}")
+        # Error Handling #1
+        col_names = [x for x in col_names1 if x in col_names2]
+        if not col_names:
+            print("No Matching Columns Found")
             return None
 
-    return col_names
+        # Error Handling #2
+        necessary_cols = ["id", "timestamp", "qc_level"]
+        for item in necessary_cols:
+            if item not in col_names:
+                print(f"Missing required column: {item}")
+                return None
+
+        return col_names
+
+    except Exception as e:
+        print("Something went wrong with finding matching columns")
+        print(f"The exception is: {e}")
 
 
 # find the frequency of each station type
-def get_frequency(type: str) -> int:
+def get_frequency(type: str) -> int | None:
+    """SUMMARY:
+    According to the type of station,
+    returns the frequency of observations
+    to be able to calculate the expected number
+    of observations made in the month.
+
+    Raises:
+        ValueError: the input is not recognized
+    """
     try:
         if type == "SMS":
             freq = 144
         elif type == "MO":
             freq = 288
+        # Error Handling #1
         else:
-            raise ValueError
+            print(f"ValueError: Unidentified Station Type: {type}")
+            return None
+
         return freq
 
-    except ValueError:
-        print("Unidentified Station Type")
-    except:  # noqa: E722
+    except Exception as e:
         print("Something went wrong with getting the frequency")
+        print(f"The exception is: {e}")
 
 
 def set_timestamp(file: Path, col_names: list[str]) -> pd.DataFrame:
@@ -133,13 +169,15 @@ def set_timestamp(file: Path, col_names: list[str]) -> pd.DataFrame:
         df["qc_level"] = 1
         df["timestamp"] = pd.to_datetime(df["timestamp"])
         df = df.set_index("timestamp")
+
         # converts utc -> local time
         df = df.tz_convert("Asia/Manila")
         df.to_csv(file)
         return df
 
-    except:  # noqa: E722
+    except Exception as e:
         print("Something went wrong with updating the CSV file")
+        print(f"The exception is: {e}")
 
 
 def main_qc1(yyyy: int, mm: int):
@@ -172,9 +210,14 @@ def main_qc1(yyyy: int, mm: int):
         obs_df = set_timestamp(file, col_names)
 
         stn_type = get_stn_type(stn_file, int(stn_id[0]))
-        freq = get_frequency(stn_type)
+        if stn_type is None:
+            continue
 
-        # !! EXCEPTION: Temporary Solution until Station 36 figures it out
+        freq = get_frequency(stn_type)
+        if freq is None:
+            continue
+
+        # !! Temporary Solution until Station 36 figures it out
         if int(stn_id[0]) == 36:
             freq = 144
 

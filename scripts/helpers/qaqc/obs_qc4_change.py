@@ -16,11 +16,13 @@ config_lesser_file = config_dir / "qc4_config_lesser.csv"
 config_sd_file = config_dir / "qc4_config_sd.csv"
 
 
-def get_config(config_file: Path) -> dict[str, int]:
+def get_config(config_file: Path) -> dict[str, int, int]:
+    """SUMMARY:
+    With the file, get the period and differences to flag
+    if the data is invalid.
+    """
     try:
-        # extract data from csv
         config_df = pd.read_csv(config_file, usecols=["var", "period", "diff"])
-
         config_dict = {key: [str, int, int] for key in range(len(config_df))}
         for key in config_dict.keys():
             name = config_df.at[key, "var"]
@@ -28,19 +30,30 @@ def get_config(config_file: Path) -> dict[str, int]:
             diff = config_df.at[key, "diff"]
 
             config_dict[key] = name, period, diff
-
         return config_dict
-    except FileNotFoundError:
-        print("Can't locate the Configuration file")
-    except Exception as e:  # noqa: E722
-        print(f"The exception is: {e}")
+
+    except Exception as e:
         print("Something went wrong with getting the configuration file of QC4")
+        print(f"The exception is: {e}")
 
 
 def get_greater_diff(
     df: pd.DataFrame, stn_id: int, check_df: pd.DataFrame
 ) -> pd.DataFrame:
+    """SUMMARY:
+    Using the `get_config()` function, gets its configuration
+    file's values and compares them to the DataFrame.
+    This Function is specifically to flag observation data that's change is too great.
+    """
     try:
+        # Error Handling #1
+        if config_greater_file is None:
+            print(
+                "FileNotFoundError: The Configuration File for flagging greater values is missing."
+            )
+            # End the function early
+            return check_df
+
         diff_dict = get_config(config_greater_file)
 
         for key in diff_dict.keys():
@@ -68,18 +81,30 @@ def get_greater_diff(
                 ]
                 check_df.index += 1
                 check_df.sort_index
-
         return check_df
 
-    except Exception as e:  # noqa: E722
-        print(f"The exception is: {e}")
+    except Exception as e:
         print("Something went wrong with testing the greater than change rate")
+        print(f"The exception is: {e}")
 
 
 def get_lesser_diff(
     df: pd.DataFrame, stn_id: int, check_df: pd.DataFrame
 ) -> pd.DataFrame:
+    """SUMMARY:
+    Using the `get_config()` function, gets its configuration
+    file's values and compares them to the DataFrame.
+    This Function is specifically to flag observation data that's change is too less.
+    """
     try:
+        # Error Handling #1
+        if config_lesser_file is None:
+            print(
+                "FileNotFoundError: The Configuration File for flagging lesser values is missing."
+            )
+            # End the function early
+            return check_df
+
         diff_dict = get_config(config_lesser_file)
 
         for key in diff_dict.keys():
@@ -110,15 +135,27 @@ def get_lesser_diff(
 
         return check_df
 
-    except Exception as e:  # noqa: E722
+    except Exception as e:
+        print("Something went wrong with testing the lesser than change rate")
         print(f"The exception is: {e}")
-        print("Something went wrong with testing the greater than change rate")
 
 
 def get_standard_dev(
     df: pd.DataFrame, stn_id: int, check_df: pd.DataFrame, length: int
 ) -> pd.DataFrame:
+    """SUMMARY:
+    Using the `get_config()` function, gets its configuration
+    file's values and compares them to the DataFrame.
+    This Function is specifically to flag observation data that's too far from the general mean.
+    """
     try:
+        if config_sd_file is None:
+            print(
+                "FileNotFoundError: The Configuration File for flagging SD values is missing."
+            )
+            # End the function early
+            return check_df
+
         df_temp = df.reset_index()
         df_temp.rename(columns={"index": "timestamp"})
         sd_dict = get_config(config_sd_file)
@@ -154,12 +191,11 @@ def get_standard_dev(
                     ]
                     check_df.index += 1
                     check_df.sort_index
-
         return check_df
 
-    except Exception as e:  # noqa: E722
-        print(f"The exception is: {e}")
+    except Exception as e:
         print("Something went wrong with testing the change rate's standard deviation")
+        print(f"The exception is: {e}")
 
 
 def qc4_change(yyyy: int, mm: int):
@@ -209,9 +245,9 @@ def qc4_change(yyyy: int, mm: int):
         will raise the `invalid_rate` flag
         """
         check_df = get_greater_diff(df, int(stn_id[0]), check_df)
+
         check_df = get_lesser_diff(df, int(stn_id[0]), check_df)
 
-        print(obs_length)
         if obs_length > 2:
             check_df = get_standard_dev(df, int(stn_id[0]), check_df, obs_length)
 
