@@ -1,5 +1,4 @@
 import pytest
-from unittest.mock import patch
 import pandas as pd
 
 
@@ -10,10 +9,7 @@ from helpers.qaqc.obs_qc2_values import (
 
 @pytest.fixture
 def mock_minmax_df():
-    return pd.DataFrame({
-        "var": ["temp", "wdir"],
-        "min": [15, 0],
-        "max": [40, 360]})
+    return pd.DataFrame({"var": ["temp", "wdir"], "min": [15, 0], "max": [40, 360]})
 
 
 @pytest.fixture

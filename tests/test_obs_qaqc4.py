@@ -5,16 +5,13 @@ from helpers.qaqc.obs_qc4_change import (
     get_config,
     get_greater_diff,
     get_lesser_diff,
-    get_standard_dev
+    get_standard_dev,
 )
 
 
 @pytest.fixture
 def mock_config_df():
-    return pd.DataFrame({
-        "var": ["temp", "pres"],
-        "period": [1, 12],
-        "diff": [5, 6]})
+    return pd.DataFrame({"var": ["temp", "pres"], "period": [1, 12], "diff": [5, 6]})
 
 
 @pytest.fixture
@@ -59,7 +56,7 @@ def test_get_lesser_diff(mocker, mock_values_df):
     assert get_lesser_diff("dummy.csv", 12, "dump.csv") is None
 
 
-def test_get_standard_dev(mocker , mock_values_df):
+def test_get_standard_dev(mocker, mock_values_df):
     mock_df = mock_values_df
     mocker.patch("pandas.read_csv", return_value=mock_df)
     assert get_standard_dev("dummy.csv", 12, "dump.csv", 54) is None
