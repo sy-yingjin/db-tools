@@ -9,11 +9,11 @@ from pathlib import Path
 # GLOBAL VARIABLES
 file_prefix = "observation"
 main_dir = Path("bak")
-config_dir = Path("helpers")
+config_dir = Path.cwd().parent
 
-config_greater_file = config_dir / "qc4_config_greater.csv"
-config_lesser_file = config_dir / "qc4_config_lesser.csv"
-config_sd_file = config_dir / "qc4_config_sd.csv"
+config_greater_file = config_dir / "config/qc2_config_greater.csv"
+config_lesser_file = config_dir / "config/qc2_config_lesser.csv"
+config_sd_file = config_dir / "config/qc2_config_sd.csv"
 
 
 def get_config(config_file: Path) -> dict[str, int, int]:
@@ -198,7 +198,7 @@ def get_standard_dev(
         print(f"The exception is: {e}")
 
 
-def qc4_change(yyyy: int, mm: int):
+def qc2_change(yyyy: int, mm: int):
     # get files from monthly directory
     files = glob.glob(os.path.join(main_dir, f"{yyyy}/{mm}/*.csv"))
 
@@ -211,21 +211,21 @@ def qc4_change(yyyy: int, mm: int):
         usecols=[
             "qc_level",
             "stn_id",
-            "qc1-missing_perc",
-            "qc1-expected_obs",
-            "qc1-actual_obs",
+            "qc0-missing_perc",
+            "qc0-expected_obs",
+            "qc0-actual_obs",
             "id",
             "timestamp",
             "flagged_error",
-            "qc2-flagged_var",
-            "qc2-flagged_data",
+            "qc1-flagged_var",
+            "qc1-flagged_data",
         ],
     )
 
-    # create new columns for qc4
-    check_df["qc4-flagged_var"] = ""
-    check_df["qc4-flagged_data"] = ""
-    check_df["qc4-excepted_data"] = ""
+    # create new columns for qc2
+    check_df["qc2-flagged_var"] = ""
+    check_df["qc2-flagged_data"] = ""
+    check_df["qc2-excepted_data"] = ""
 
     # loop through the files
     for file in files:
@@ -236,7 +236,7 @@ def qc4_change(yyyy: int, mm: int):
 
         obs_length = len(df)
 
-        stn_id = re.findall(f"{yyyy}{mm}-([\\d]+).csv", os.path.basename(file))  # noqa: E501
+        stn_id = re.findall(f"{yyyy}{mm}-([\\d]+).csv", os.path.basename(file))
 
         print(f"Checking the change rate from station id {stn_id[0]}...")
 

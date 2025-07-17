@@ -9,9 +9,9 @@ from pathlib import Path
 # GLOBAL VARIABLES
 file_prefix = "observation"
 main_dir = Path("bak")
-config_dir = Path("helpers")
+config_dir = Path.cwd().parent
 
-config_file = config_dir / "qc2_config.csv"
+config_file = config_dir / "config/qc1_config.csv"
 
 
 # get the configuration for min-max values
@@ -28,7 +28,7 @@ def get_minmax(file: Path | None = None) -> dict[str, int | int] | None:
         if file is None:
             file = config_file
             if config_file is None:
-                print("FileNotFoundError: `qc2_config.csv` can't be located.")
+                print("FileNotFoundError: `qc1_config.csv` can't be located.")
                 return None
 
         # extract data from csv
@@ -218,7 +218,7 @@ def get_logic_wdir(
         print(f"The exception is: {e}")
 
 
-def qc2_values(yyyy: int, mm: int):
+def qc1_values(yyyy: int, mm: int):
     # get files from monthly directory
     files = glob.glob(os.path.join(main_dir, f"{yyyy}/{mm}/*.csv"))
 
@@ -231,17 +231,17 @@ def qc2_values(yyyy: int, mm: int):
         usecols=[
             "qc_level",
             "stn_id",
-            "qc1-missing_perc",
-            "qc1-expected_obs",
-            "qc1-actual_obs",
+            "qc0-missing_perc",
+            "qc0-expected_obs",
+            "qc0-actual_obs",
         ],
     )
-    # create new columns for qc2
+    # create new columns for qc1
     check_df["id"] = ""
     check_df["timestamp"] = ""
     check_df["flagged_error"] = ""
-    check_df["qc2-flagged_var"] = ""
-    check_df["qc2-flagged_data"] = ""
+    check_df["qc1-flagged_var"] = ""
+    check_df["qc1-flagged_data"] = ""
 
     # loop through the files
     for file in files:
@@ -250,7 +250,7 @@ def qc2_values(yyyy: int, mm: int):
         df["timestamp"] = pd.to_datetime(df["timestamp"])
         df = df.set_index("timestamp")
 
-        stn_id = re.findall(f"{yyyy}{mm}-([\\d]+).csv", os.path.basename(file))  # noqa: E501
+        stn_id = re.findall(f"{yyyy}{mm}-([\\d]+).csv", os.path.basename(file))
 
         print(f"Checking validity of data from station id {stn_id[0]}...")
 

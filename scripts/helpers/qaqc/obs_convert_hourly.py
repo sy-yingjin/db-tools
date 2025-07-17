@@ -82,7 +82,7 @@ def get_matching_columns() -> list[str]:
 
 
 # Running this file will before qc1 and qc2 will make their reports inaccurate
-def qc3_hourly(yyyy, mm):
+def convert_hourly(yyyy, mm):
     # get files from monthly directory
     files = glob.glob(os.path.join(main_dir, f"{yyyy}/{mm}/*.csv"))
 

@@ -180,7 +180,7 @@ def set_timestamp(file: Path, col_names: list[str]) -> pd.DataFrame:
         print(f"The exception is: {e}")
 
 
-def main_qc1(yyyy: int, mm: int):
+def qc0_missing(yyyy: int, mm: int):
     # get files from monthly directory
     files = glob.glob(os.path.join(main_dir, f"{yyyy}/{mm}/*.csv"))
 
@@ -188,9 +188,9 @@ def main_qc1(yyyy: int, mm: int):
         columns=[
             "qc_level",
             "stn_id",
-            "qc1-missing_perc",
-            "qc1-expected_obs",
-            "qc1-actual_obs",
+            "qc0-missing_perc",
+            "qc0-expected_obs",
+            "qc0-actual_obs",
         ]
     )
 
@@ -199,7 +199,7 @@ def main_qc1(yyyy: int, mm: int):
 
     # loop through files
     for file in files:
-        stn_id = re.findall(f"{yyyy}{mm}-([\\d]+).csv", os.path.basename(file))  # noqa: E501
+        stn_id = re.findall(f"{yyyy}{mm}-([\\d]+).csv", os.path.basename(file))
 
         print(f"Checking observation data of station id {stn_id[0]}...")
 

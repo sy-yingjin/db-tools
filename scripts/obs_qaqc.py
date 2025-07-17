@@ -3,11 +3,11 @@ import pandas as pd
 from datetime import datetime
 
 
-from helpers.qaqc import obs_qc0_splitstn
-from helpers.qaqc import obs_qc1_missing
-from helpers.qaqc import obs_qc2_values
-from helpers.qaqc import obs_qc3_hourly
-from helpers.qaqc import obs_qc4_change
+from helpers.qaqc import obs_splitstn
+from helpers.qaqc import obs_qc0_missing
+from helpers.qaqc import obs_qc1_values
+from helpers.qaqc import obs_convert_hourly
+from helpers.qaqc import obs_qc2_change
 
 
 def help_message(nargs: int):
@@ -43,26 +43,26 @@ def main():
     validate_request(yyyy, mm)
 
     try:
-        print("\nRunning QC0 = Splitting Stations Script... \n")
+        print("\nAccessing Database = Splitting Stations Script... \n")
         # make a list of stations with their ids and types
-        obs_qc0_splitstn.get_stations()
-        obs_qc0_splitstn.split_station(yyyy, mm)
+        obs_splitstn.get_stations()
+        obs_splitstn.split_station(yyyy, mm)
 
-        print("\nRunning QC1 = Getting Missing Percentage Script... \n")
-        obs_qc1_missing.main_qc1(yyyy, mm)
+        print("\nRunning QC0 = Getting Missing Percentage Script... \n")
+        obs_qc0_missing.qc0_missing(yyyy, mm)
 
-        print("\nRunning QC2 = Confirming Observation Values Script... \n")
-        obs_qc2_values.qc2_values(yyyy, mm)
+        print("\nRunning QC1 = Confirming Observation Values Script... \n")
+        obs_qc1_values.qc1_values(yyyy, mm)
 
-        print("\nRunning QC3 = Converting Data to Hourly Reports Scipt... \n")
-        obs_qc3_hourly.qc3_hourly(yyyy, mm)
+        print("\nRunning Preprocessing = Converting Data to Hourly Reports Scipt... \n")
+        obs_convert_hourly.convert_hourly(yyyy, mm)
 
-        print("\nRunning QC4 = Comparing Data Between Hours... \n")
-        obs_qc4_change.qc4_change(yyyy, mm)
+        print("\nRunning QC2 = Comparing Data Between Hours... \n")
+        obs_qc2_change.qc2_change(yyyy, mm)
 
     except NameError:
         print("One of the QAQC scripts is missing or not working.")
-    except Exception as e:  # noqa: E722
+    except Exception as e:
         print(f"The exception is: {e}")
         print("One of the QAQC scripts didn't run properly.")
 

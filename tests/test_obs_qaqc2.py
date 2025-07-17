@@ -1,15 +1,17 @@
 import pytest
 import pandas as pd
 
-
-from helpers.qaqc.obs_qc2_values import (
-    get_minmax,
+from helpers.qaqc.obs_qc2_change import (
+    get_config,
+    get_greater_diff,
+    get_lesser_diff,
+    get_standard_dev,
 )
 
 
 @pytest.fixture
-def mock_minmax_df():
-    return pd.DataFrame({"var": ["temp", "wdir"], "min": [15, 0], "max": [40, 360]})
+def mock_config_df():
+    return pd.DataFrame({"var": ["temp", "pres"], "period": [1, 12], "diff": [5, 6]})
 
 
 @pytest.fixture
@@ -35,8 +37,26 @@ def mock_values_df():
     return df
 
 
-def test_get_minmax(mocker, mock_minmax_df):
+def test_get_config(mocker, mock_config_df):
     mock_df = mocker.Mock()
-    mock_df = mock_minmax_df
+    mock_df = mock_config_df
     mocker.patch("pandas.read_csv", return_value=mock_df)
-    assert get_minmax("dummy.csv") == {"temp": [15, 40], "wdir": [0, 360]}
+    assert get_config("dummy.csv") == {0: ("temp", 1, 5), 1: ("pres", 12, 6)}
+
+
+def test_get_greater_diff(mocker, mock_values_df):
+    mock_df = mock_values_df
+    mocker.patch("pandas.read_csv", return_value=mock_df)
+    assert get_greater_diff("dummy.csv", 12, "dump.csv") is None
+
+
+def test_get_lesser_diff(mocker, mock_values_df):
+    mock_df = mock_values_df
+    mocker.patch("pandas.read_csv", return_value=mock_df)
+    assert get_lesser_diff("dummy.csv", 12, "dump.csv") is None
+
+
+def test_get_standard_dev(mocker, mock_values_df):
+    mock_df = mock_values_df
+    mocker.patch("pandas.read_csv", return_value=mock_df)
+    assert get_standard_dev("dummy.csv", 12, "dump.csv", 54) is None
